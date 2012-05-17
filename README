@@ -1,0 +1,10 @@
+Javascript + HTML5 canvas map alignment tool for bundle files.
+
+There are several pieces:
+
+1. PHP code for loading bundle files into javascript
+2. Javascript Canvas alignment code
+3. Mechanical turk bits in the PHP code (this is an example of an external hit)
+4. Mturk command line code for launching these jobs as external hits
+
+This code adapted from: http://adamsmith.as/typ0/k/canvas.html
