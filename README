@@ -7,4 +7,11 @@ There are several pieces:
 3. Mechanical turk bits in the PHP code (this is an example of an external hit)
 4. Mturk command line code for launching these jobs as external hits
 
-This code adapted from: http://adamsmith.as/typ0/k/canvas.html
+
+The basic alignment code adapted from: http://adamsmith.as/typ0/k/canvas.html
+
+Here's the link to the amazon mturk command line tools I used: http://aws.amazon.com/developertools/Amazon-Mechanical-Turk/694
+
+I wrote a blog post about some external hit stuff I just figured out: http://kaflurbaleen.blogspot.com/2012/05/in-which-i-battle-mturk-external-hits.html
+
+You should realize that the "bundle id" thing has to do with PhotoCity seeds and you'll need to have that json_encode_bundle.php file read them from a more appropriate place. 
