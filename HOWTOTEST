@@ -1,0 +1,17 @@
+How to test that the various components work:
+
+Note: The html, javascript, php need to be hosted on a webserver in order for the php and javascript to work correctly. I (kathleen) run the code on one of the photocity web sersvers at UW.
+
+
+1. json_encode_bundle.php:
+- New arguments: "lid=XXXX.XXXX.X"
+- Look in external_hit.input for an example value, e.g. "0001.1457.0"
+http://phci03.cs.washington.edu/alignment/json_encode_bundle.php?lid=0001.1457.0
+
+2. mturk_align.html
+- This is the page that will be displayed through the mturk hit iframe.
+- Should work if parameters for centerLat, centerLong, and bundleId are provided.
+http://phci03.cs.washington.edu/alignment/mturk_align.html?centerLat=51.508&centerLong=-0.128042&bundleId=0001.3951.0
+
+~                                                                                                          
+~         

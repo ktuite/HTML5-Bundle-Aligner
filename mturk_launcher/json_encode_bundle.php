@@ -1,5 +1,18 @@
 <?php
 
+/*
+if (isset($_REQUEST['photocity_seed'])){
+    $user_seed_id = $_REQUEST['photocity_seed'];
+    $bundle_file = "/projects/grail/photocity3/user_seeds/".$user_seed_id."/bundle.repos";
+}
+elseif (isset($_REQUEST['lid'])){
+    $lid = $_REQUEST['lid'];
+    $bundle_file = "bundle.".$lid.".out";
+}
+else {
+    $bundle_file = "http://grail.cs.washington.edu/projects/photocity/data/piazzadeimeracoli.bundle";
+}
+*/
 
 if (isset($_REQUEST['lid'])){
     $bundleId = $_REQUEST['lid'];
@@ -56,8 +69,6 @@ for($i = 0; $i < $cams; $i++){
             $images[] = $obj;
 }
 
-$pt_avg = array(0,0,0);
-
 if ($points > 40000){
     $skip = 300;
 }
@@ -71,30 +82,28 @@ $s_points = array();
 for($i = 0; $i < $points && $i<400000; $i++){
     $line = fgets($fp, 4096);
     $p = explode(' ',$line);
-    $obj = array('x'=>floatval($p[0]), 'y'=>floatval($p[1]), 'z'=>floatval($p[2]));
-    if ($i % $skip == 0){
+    $obj = array('x'=>$p[0], 'y'=>$p[1], 'z'=>$p[2]);
+    if ($i % $skip == 0)
         $s_points[] = $obj;
-        
-        for ($k = 0; $k < 3; $k++){
-            $pt_avg[$k] = $pt_avg[$k] + $p[$k];
-        }
-    }
     for($j = 0; $j<2; $j++){
         $crud = fgets($fp, 4096);
     }
 }
 fclose($fp);
 
-// re-center points
-$num_points = count($s_points);
-for($k = 0; $k < 3; $k++){
-    $pt_avg[$k] = $pt_avg[$k] / $num_points;
-}
+print "pts = " . json_encode($s_points) .";";
+print "cams = " . json_encode($images) . ";";
 
+/*
+$op = fopen($bundle_file."json_test",'w');
+if (!$op)
+    die("Cannot write test json");
+$ptstring = "pts = " . json_encode($s_points) .";";
+$camstring = "cams = " . json_encode($images) . ";";
+fwrite($op, $ptstring);
+fwrite($op, $camstring);
+fclose($op);
+*/
 
-$final = array("pts"=>$s_points, "cams"=>$images, "avg"=>$pt_avg);
-
-header("Content-type: application/json");
-print json_encode($final);
 
 ?>
