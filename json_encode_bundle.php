@@ -37,8 +37,8 @@ $points = $x[1];
 
 /* bundler output file version 0.3 */
 /* input ECEF XYZ */
-if ($cams > 500)
-    $skip = 10;
+$skip = ceil($cams/200);
+
 $images = array();
 for($i = 0; $i < $cams; $i++){
     $line = fgets($fp, 4096);
@@ -58,15 +58,8 @@ for($i = 0; $i < $cams; $i++){
 
 $pt_avg = array(0,0,0);
 
-if ($points > 40000){
-    $skip = 300;
-}
-else if ($points > 3000){
-    $skip = 90;
-}
-else{
-    $skip = 10;
-}
+$skip = ceil(min($points, 400000)/4000);
+
 $s_points = array();
 for($i = 0; $i < $points && $i<400000; $i++){
     $line = fgets($fp, 4096);
