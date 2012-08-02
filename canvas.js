@@ -52,7 +52,7 @@ var dtx_rotate = 0;
 var dtx_scale = 1;
 
 /* Degrees longitude per pixel at the specified zoom. */
-var longScale = 360 / (256 * Math.pow(2, zoomLevel));
+var longScale = 0;
 /* Degrees latitude per pixel at the specified zoom, depends on latitude. */
 var latScale = 0;
 
@@ -94,6 +94,16 @@ function build_map_url(){
     return mapUrl;
 }
 
+function computeLatLongScale(){
+    longScale = 360 / (256 * Math.pow(2, zoomLevel));
+
+    var w_y = lat2Y(centerLat, zoomLevel);
+    var w_lat_low = y2Lat(w_y + h/2, zoomLevel);
+    var w_lat_high = y2Lat(w_y - h/2, zoomLevel);
+
+    latScale = (w_lat_high - w_lat_low) / h;
+}
+
 function canvas_init_with_points(pts, cam_pts) {
     canvas = document.getElementById("canvas");
     w = canvas.width;
@@ -109,11 +119,7 @@ function canvas_init_with_points(pts, cam_pts) {
     var mapUrl = build_map_url(); 
     map_img.src = mapUrl;
 
-    var w_y = lat2Y(centerLat, zoomLevel);
-    var w_lat_low = y2Lat(w_y + h/2, zoomLevel);
-    var w_lat_high = y2Lat(w_y - h/2, zoomLevel);
-
-    latScale = (w_lat_high - w_lat_low) / h;
+    computeLatLongScale();
 
     for(pt in pts){
         var p = pts[pt];
@@ -347,4 +353,36 @@ function latDeg2M(lat){
         (180 * Math.sqrt(Math.pow((1 - Math.pow(e,2) * 
                                    Math.pow(Math.sin(lat * Math.pi / 180), 2)), 3)));
     //return 111132.954 - 599.822 * Math.cos(2 * lat) + 1.175 * Math.cos(4 * lat);
+}
+
+/* Move the entire map n/s/e/w
+ * Keep the translation matrix updated, too.
+ * Since it's a static map (to allow the points on top to move) we're moving the map manually by changing the image.
+ */
+function navigate(dir){
+    if (dir == "zoomOut")
+        zoomLevel --;
+    else if (dir == "zoomIn")
+        zoomLevel++;
+
+    var z = 1 << zoomLevel; 
+    var d = 0.2 * w / z;
+
+    if (dir == "north"){
+        centerLat += d;
+    }
+    else if (dir == "south"){
+        centerLat -= d;
+    }
+    else if (dir == "east"){
+        centerLong += d;
+    }
+    else if (dir == "west"){
+        centerLong -= d;
+    }
+
+    var mapUrl = build_map_url(); 
+    map_img.src = mapUrl;
+    computeLatLongScale();
+    updateForm();
 }

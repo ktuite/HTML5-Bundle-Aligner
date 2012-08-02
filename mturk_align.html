@@ -61,6 +61,8 @@
         document.getElementById('scale').value = tx_scale;
         document.getElementById('lat_scale').value = latScale;
         document.getElementById('long_scale').value = longScale;
+        document.getElementById('new_center_lat').value = centerLat;
+        document.getElementById('new_center_long').value = centerLong;
         document.getElementById('transform_matrix').value = finalMatrix.inspect();
     }
 
@@ -85,6 +87,18 @@
     <span class="tool" id="translate_tool" style="background-color: #dd88cc;" onclick="switchMode('translate')">translate</span>
     <span class="tool" id="rotate_tool" onclick="switchMode('rotate')">rotate</span>
     <span class="tool" id="scale_tool" onclick="switchMode('scale')">scale</span>
+
+    <br />
+    <br />
+    <br />
+    <b>Navigate:</b>
+    <span class="tool" id="north" onclick="navigate('north')">N</span>
+    <span class="tool" id="south" onclick="navigate('south')">S</span>
+    <span class="tool" id="east" onclick="navigate('east')">E</span>
+    <span class="tool" id="west" onclick="navigate('west')">W</span>
+    <span class="tool" id="in" onclick="navigate('zoomIn')">Zoom In</span>
+    <span class="tool" id="out" onclick="navigate('zoomOut')">Zoom Out</span>
+    
 </div>
 
 
@@ -115,6 +129,8 @@
 <input type="hidden" id="scale" name="scale" value="">
 <input type="hidden" id="lat_scale" name="lat_scale" value="">
 <input type="hidden" id="long_scale" name="long_scale" value="">
+<input type="hidden" id="new_center_lat" name="new_center_lat" value="">
+<input type="hidden" id="new_center_long" name="new_center_long" value="">
 <input type="hidden" id="transform_matrix" name="transfrm_matrix" value="">
 
 Photo of the scene:
