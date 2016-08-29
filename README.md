@@ -19,5 +19,14 @@ Choose bounds for the map image:
     var bottomLat = 47.65280636096129;
     var rightLong = -122.3051905632019;
 
+
+Screenshot:
+
+![Screenshot showing points aligned to building facade](screenshot.png)
+
+One of the photos used to make this point cloud:
+
+![One of the photos used to make this point cloud](cse.jpg "One of the photos used to make this point cloud")
+
 ### Notes
 Uses the Javascript matrix library sylvester (http://sylvester.jcoglan.com/) to compute a matrix from translation, rotation, and scale. 
