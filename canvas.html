@@ -1,0 +1,220 @@
+<html>
+ <head>
+  <script type="text/javascript" src="sylvester.js"></script>
+  <script type="text/javascript" src="jquery.js"></script>
+  <script type="application/x-javascript">
+    var apiKey = "YOUR-API-KEY-HERE";
+    var zoomLevel = 18;
+    var map = null;
+    var mapReady = false;
+
+    var pts = null;
+    $.getJSON('./cse.json', function(data){
+        pts = data;
+        init();
+    });
+
+    var topLat = 47.6539193340082;
+    var leftLong = -122.3073148727417;
+    var bottomLat = 47.65280636096129;
+    var rightLong = -122.3051905632019;
+    
+    var centerLat = (topLat+bottomLat)/2;
+    var centerLong = (leftLong+rightLong)/2;
+
+    var dragging = false;
+
+    var dragon_x = 0;
+    var dragon_y = 0;
+
+    var tx_translate_x = 0;
+    var tx_translate_y = 0;
+    var tx_rotate = 0;
+    var tx_scale = 1;
+
+    var dtx_translate_x = 0;
+    var dtx_translate_y = 0;
+    var dtx_rotate = 0;
+    var dtx_scale = 1;
+
+    var canvas = null;
+
+    var mode = null;
+    
+    var w, h;
+
+    function canvasRelative(e) {
+        var rect = canvas.getBoundingClientRect();
+        var x = e.pageX - rect.left - document.body.scrollLeft;
+        var y = e.pageY - rect.top - document.body.scrollTop;
+        return {x:x,y:y};
+    }
+
+    function init() {
+        canvas = document.getElementById("canvas");
+        w = canvas.width;
+        h = canvas.height;
+
+        var center_x = 0;
+        var center_y = 0;
+        for(i in pts) {
+            var p = pts[i]
+            center_x += p.x;
+            center_y += p.y;
+        }
+        tx_translate_x = -w * center_x / pts.length;
+        tx_translate_y = -w * center_y / pts.length;
+
+        map = new Image();
+        map.onload = function() { mapReady = true; draw() };
+        var mapBase = "http://maps.google.com/maps/api/staticmap";
+        var mapUrl = mapBase + "?" +
+                        "center="+centerLat+","+centerLong + 
+                        "&path=color:blue|weight:5" +
+                            "|"+topLat+","+leftLong +
+                            "|"+bottomLat+","+leftLong +
+                            "|"+bottomLat+","+rightLong +
+                            "|"+topLat+","+rightLong +
+                            "|"+topLat+","+leftLong +
+                        "&zoom="+ zoomLevel +
+                        "&size="+w+"x"+h +
+                        "&maptype=hybrid" +
+                        "&key="+apiKey +
+                        "&sensor=false";
+        map.src = mapUrl;
+
+        draw();
+    }
+
+    function move(event) {
+        if(dragging) {
+            var rel = canvasRelative(event); 
+            var mx = rel.x - w/2;
+            var my = rel.y - h/2;
+            var odx = dragon_x - tx_translate_x;
+            var ody = dragon_y - tx_translate_y;
+            var cdx = mx - tx_translate_x;
+            var cdy = my - tx_translate_y;
+
+            if(mode == "translate") {
+                dtx_translate_x = cdx - odx;
+                dtx_translate_y = cdy - ody;
+            }
+            
+            if(mode == "scale") {
+                var ol = Math.sqrt(odx*odx+ody*ody);
+                var cl = Math.sqrt(cdx*cdx+cdy*cdy);
+                dtx_scale = cl/ol;
+            }
+
+            if(mode == "rotate") {
+                var or = Math.atan2(odx,ody);
+                var cr = Math.atan2(cdx,cdy);
+                dtx_rotate = or-cr;
+            }
+
+            draw();
+        }
+    }
+
+    function startDrag(event) {
+        dragging = true;
+        var rel = canvasRelative(event); 
+        dragon_x = rel.x - w/2;
+        dragon_y = rel.y - h/2;
+        draw();
+    }
+
+    function stopDrag(event,commit) {
+        dragging = false;
+        if(commit) {
+            tx_translate_x += dtx_translate_x;
+            tx_translate_y += dtx_translate_y;
+            tx_rotate += dtx_rotate;
+            tx_scale *= dtx_scale;
+        }
+
+        dtx_translate_x = 0;
+        dtx_translate_y = 0;
+        dtx_rotate = 0;
+        dtx_scale = 1;
+        
+        $("#notes").html( 
+            "\n{\n"+
+                "  translate_x: " + tx_translate_x + ",\n" +
+                "  translate_y: " + tx_translate_y + ",\n" +
+                "  rotate: " + tx_rotate + ",\n" +
+                "  scale: " + tx_scale + "\n" +
+            "}\n\n");
+    
+        var mrotate = Matrix.RotationZ(tx_rotate);
+        var mscale = $M([   [tx_scale,0,0],
+                            [0,tx_scale,0],
+                            [0,0,1]]);
+        var longScale = 360/(256*Math.pow(2,zoomLevel));
+        var latScale = 180/(256*Math.pow(2,zoomLevel));
+        var mtrans = $M([   [0,0,tx_translate_x*longScale+centerLong],
+                            [0,0,-tx_translate_y*latScale+centerLat],
+                            [0,0,0]]);
+
+
+        var finalMatrix = Matrix.I(3).
+                            multiply(mrotate).
+                            multiply(mscale).
+                            multiply($M([[w*longScale/2,0,0],[0,w*latScale/2,0],[0,0,1]])).
+                            add(mtrans);
+                            
+        $("#matrix").html(finalMatrix.inspect());
+        
+        draw();     
+    }
+
+    function draw() {
+        var canvas = document.getElementById("canvas");
+        var ctx = canvas.getContext("2d");
+
+        ctx.clearRect(0,0,w,h);
+        if(mapReady) {
+            ctx.drawImage(map,0,0);
+        }
+ 
+        ctx.save();
+        ctx.fillStyle = "red";
+        ctx.translate(  w/2 + tx_translate_x + dtx_translate_x,
+                        h/2 + tx_translate_y + dtx_translate_y);
+        ctx.rotate(tx_rotate + dtx_rotate);
+        ctx.scale(w * tx_scale * dtx_scale,
+                  w * tx_scale * dtx_scale);
+        var ds = 2.5/(w*tx_scale*dtx_scale);
+        for(pt in pts) { 
+          var p = pts[pt];
+          ctx.fillRect(p.x-ds/2,p.y-ds/2,ds,ds);
+        }
+        ctx.restore();
+    }
+  </script>
+ </head>
+ <body>
+    <h1>Align those points!</h1>
+    <table><tr><td>
+    <canvas  id="canvas"
+            width="512"
+            height="512"
+            onmousemove="move(event);"
+            onmousedown="startDrag(event);"
+            onmouseout="stopDrag(event,false);"
+            onmouseup="stopDrag(event,true);"
+            style="border: thin solid black;">
+    </canvas>
+    <div id="modes" style="font-size: x-large;">
+        <a href="#" onclick="mode='translate';false;">translate</a>
+        <a href="#" onclick="mode='rotate';false;">rotate</a>
+        <a href="#" onclick="mode='scale';false;">scale</a>
+    </div>
+    </td><td>
+        <pre id="notes" style="font-size: large; font-weight: bolder;"></pre>
+        <pre id="matrix" style="font-size: large; font-weight: bolder;"></pre>
+    </td></tr><table>
+</body>
+</html>
+
